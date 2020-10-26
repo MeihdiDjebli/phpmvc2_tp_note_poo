@@ -102,4 +102,35 @@ class UtilisateurRepository
                 );
         }
     }
+
+    /**
+     * Créer un utilisateur en base de données
+     *
+     * @param Utilisateur|Contributeur|Administrateur $utilisateur
+     * @return bool (true si création OK sinon false)
+     */
+    public static function create(Utilisateur $utilisateur): bool
+    {
+        $identifiant = $utilisateur->getIdentifiant();
+        $utilisateurExiste = self::find($identifiant);
+
+        if ($utilisateurExiste instanceof Utilisateur) { // L'utilisateur existe déjà !
+            return false;
+        }
+
+        $sql = "INSERT INTO utilisateur VALUES ('%s', '%s', '%s', '%s', %d, %d)";
+
+        $mysqli = self::connect();
+        $result = $mysqli->query(sprintf(
+            $sql,
+            $identifiant,
+            $utilisateur::getDiscr(),
+            $utilisateur->getNomComplet(),
+            $utilisateur->getMdp(),
+            $utilisateur instanceof Contributeur ? $utilisateur->getContribution() : 'NULL',
+            $utilisateur instanceof Administrateur ? $utilisateur->getNiveauAcces() : 'NULL'
+        ));
+
+        return $result !== false;
+    }
 }
